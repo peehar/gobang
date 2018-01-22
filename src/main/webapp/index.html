@@ -1,0 +1,38 @@
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="style.css">
+    <style>
+    </style>
+    <script src="./vue/vue.js"></script>
+</head>
+
+<body>
+
+    <div id="app">
+        <div class="panel">
+            <div class="zi">
+                <div class="row" v-for="y in 15">
+                    <div class="cell" v-for="x in 15" @click="put(x-1, y-1)">
+                        <span :class="color(x-1, y-1)"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="line">
+                <div v-for="(row, y) in 14">
+                    <div class="line-cell" v-for="(cell, x) in 14">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="index.js">
+      
+
+    </script>
+
+</body>
+
+</html>
