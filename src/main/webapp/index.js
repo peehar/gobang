@@ -1,10 +1,10 @@
 var zi = {};
-for (var y = 0; y < 15; y++) {
+for (var x = 0; x < 15; x++) {
     var row = {};
-    for (var x = 0; x < 15; x++) {
-        row[x] = 0;
+    for (var y = 0; y < 15; y++) {
+        row[y] = 0;
     }
-    zi[y] = row;
+    zi[x] = row;
 }
 
 var app = new Vue({
@@ -16,12 +16,35 @@ var app = new Vue({
     },
     methods: {
         put(x, y) {
-            zi[y][x] = zi[y][x] == 0 ? 1 : zi[y][x] == 1 ? 2 : 0;
+            if (zi[x][y] == 0) {
+                Vue.http.post("/gobang/play", {x:x, y:y}).then(function(data){
+                    if(data.ok){
+                        var color =  JSON.parse(data.bodyText);
+                        for (var x = 0; x < 15; x++) {
+                            for (var y = 0; y < 15; y++) {
+                                zi[x][y] = color[x][y];
+                            }
+                        }
+                    }
+                });
+            }
         },
         color(x, y) {
-            var v = zi[y][x];
+            var v = zi[x][y];
             var c = v == 0 ? '' : v == 1 ? 'cell white' : 'cell black';
             return c;
         }
     },
 })
+
+
+Vue.http.post("/gobang/play", null).then(function(data){
+    if(data.ok){
+        var color =  JSON.parse(data.bodyText);
+        for (var x = 0; x < 15; x++) {
+            for (var y = 0; y < 15; y++) {
+                zi[x][y] = color[x][y];
+            }
+        }
+    }
+});

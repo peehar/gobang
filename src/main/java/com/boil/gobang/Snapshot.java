@@ -23,53 +23,6 @@ public class Snapshot {
          */
     }
 
-    private static class PointIterator {
-
-        private final int x;
-        private final int y;
-        private final Dir dir;
-        private final Snapshot ss;
-        private final int end;
-
-        private int index;
-        private Color color;
-
-        public PointIterator(int x, int y, int begin, int end, Dir dir, Snapshot ss) {
-            this.x = x;
-            this.y = y;
-            this.dir = dir;
-            this.ss = ss;
-            this.index = begin;
-            this.end = end;
-            next();
-        }
-
-        public Color next() {
-            color = null;
-            int tx = x + index * dir.x;
-            int ty = y + index * dir.y;
-            boolean inBorad = 0 <= tx && tx < 15 && 0 <= ty && ty < 15;
-            while (index < 0 && !inBorad) {
-                index++;
-                tx = x + index * dir.x;
-                ty = y + index * dir.y;
-                inBorad = 0 <= tx && tx < 15 && 0 <= ty && ty < 15;
-            }
-
-            if (inBorad && index <= this.end) {
-                color = this.ss.borad[tx][ty];
-                this.index++;
-            }
-            return color;
-        }
-
-        public Color get() {
-            return color;
-        }
-
-    }
-
-
     private static class Dir {
         public int x;
         public int y;
@@ -95,6 +48,15 @@ public class Snapshot {
         for (int x = 0; x < 15; x++) {
             for (int y = 0; y < 15; y++) {
                 this.borad[x][y] = color[x][y];
+            }
+        }
+    }
+
+    public Snapshot() {
+        this.level = 0;
+        for (int x = 0; x < 15; x++) {
+            for (int y = 0; y < 15; y++) {
+                this.borad[x][y] = Color.Nul;
             }
         }
     }
@@ -248,59 +210,6 @@ public class Snapshot {
 
         }
     }
-//
-//        PointIterator pIter = new PointIterator(x, y, dir, this);
-//        while (pIter.hasMore()) {
-//            Color c = pIter.next();
-//            if (c == null) {
-//
-//            }
-//        }
-//
-//
-//        Color color = this.borad[x][y];
-//        List<Zi> zis = new ArrayList<Zi>();
-//        Zi left = new Zi();
-//        for (int k = -4; k < 4; k++) {
-//            int tx = x + k * dir.x;
-//            int ty = y + k * dir.y;
-//            if (0 <= tx && tx < 15 && 0 <= ty && ty < 15) {
-//                Color c = this.borad[x][y];
-//                if (c == null) {
-//                    room++;
-//                } else if (c == color) {
-//                    count++;
-//                } else {
-//                    if (k < 0) {
-//                        zis.clear();
-//                    } else {
-//                        break;
-//                    }
-//                }
-//                if (c != color && count > 0) {
-//
-//                }
-//                last = c;
-//            }
-//        }
-//
-//        for (int i = -1; i <= 1; i += 2) {
-//            for (int j = 1; j < 5; j++) {
-//                int tx = x + dir.x * j * i;
-//                int ty = y + dir.y * j * i;
-//                if (tx >= 0 && tx < 15 && ty >= 0 && ty < 15 && this.borad[tx][ty] == color) {
-//                    continue;
-//                }
-//                if (this.borad[tx][ty] == color) {
-//
-//                }
-//            }
-//        }
-//
-//        for (int i = 0; i < 8; i++) {
-//
-//        }
-//    }
 
     private void print() {
         for (int x = 0; x < 15; x++) {
