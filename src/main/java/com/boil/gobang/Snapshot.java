@@ -67,6 +67,10 @@ public class Snapshot {
 
     }
 
+    public Snapshot clone() {
+        return new Snapshot(this.borad, this.level + 1);
+    }
+
     public Color[][] getcolor() {
         return borad;
     }
@@ -74,18 +78,42 @@ public class Snapshot {
 
     public void play(int x, int y, Color color) {
         this.borad[x][y] = color;
+    }
+
+    private int evalDeep(int x, int y, Color color) {
+        for (Dir d : dir) {
+            for (int i = -1; i <=1; i += 2) {
+                for (int k = 1; k < 5; k++) {
+                    int tx = x + d.x * k * i;
+                    int ty = y + d.y * k * i;
+
+                    int s;
+                    Snapshot ss = this.clone();
+                    if (level == 4) {
+                        int ns = evalComplex(tx, ty);
+                        int as = ss.evalDeep(tx, ty, color == Color.Black ? Color.White : Color.Black);
+                        s = ns > as ? ns : as;
+                    } else if (level == 5) {
+                        s = evalComplex(tx, ty);
+                    } else {
+                        ss.play(tx, ty, color == Color.Black ? Color.White : Color.Black);
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+
+    private int evalComplex(int x, int y) {
+        // 如果一次着子形成了n个棋形，那么分开着子的话，这次着子就相当于n次着子，
+        // 也就是说，去掉最大分支的方向（因为这个方向会被堵），其他方向上的各挣了一次着子的机会，所以其他方向加1，
+        // 然后算出所有方向中的最大值，就是这次着子的分数
+
         List<LinkedList<Zi>> zis = new ArrayList<LinkedList<Zi>>();
         for (Dir d : dir) {
             LinkedList<Zi> zi = fetch(x, y, d);
             zis.add(zi);
         }
-        int c = evalComplex(zis);
-    }
-
-    private int evalComplex(List<LinkedList<Zi>> zis) {
-        // 如果一次着子形成了形成了n个棋形，那么分开着子的话，这次着子就相当于n次着子，
-        // 也就是说，去掉最大分支的方向（因为这个方向会被堵），其他方向上的各挣了一次着子的机会，所以其他方向加1，
-        // 然后算出所有方向中的最大值，就是这次着子的分数
 
         int[] cs = new int[4];
         int index = 0;
