@@ -22,15 +22,13 @@ public class GoBangServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(true);
-
+        String sid = session.getId();
         Snapshot ss;
         if (session.isNew()) {
             ss =  new Snapshot();
-            String id = session.getId();
-            snapshot.put(id, ss);
+            snapshot.put(sid, ss);
         } else {
-            String id = session.getId();
-            ss = snapshot.get(id);
+            ss = snapshot.get(sid);
         }
 
         BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream(),"utf-8"));
@@ -44,7 +42,14 @@ public class GoBangServlet extends HttpServlet {
         if (obj != null) {
             Integer px = obj.getInteger("x");
             Integer py = obj.getInteger("y");
-            ss.getcolor()[px][py] = Color.White;
+            Boolean clear = obj.getBoolean("clear");
+            if (px != null) {
+//                ss.getcolor()[px][py] = Color.White;
+                ss.play(px, py, Color.White);
+            } else if (clear) {
+                ss =  new Snapshot();
+                snapshot.put(sid, ss);
+            }
         }
 
         // 设置响应内容类型

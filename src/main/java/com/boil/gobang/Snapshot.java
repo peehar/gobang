@@ -1,5 +1,7 @@
 package com.boil.gobang;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -59,24 +61,93 @@ public class Snapshot {
                 this.borad[x][y] = Color.Nul;
             }
         }
+
+        borad[7][3] = borad[7][3] = borad[7][3] = Color.Black;
+//        borad[7][5] = borad[7][7] = Color.White;
+
     }
 
     public Color[][] getcolor() {
         return borad;
     }
 
-    public double calculate(int x, int y, Color color) {
+
+    public void play(int x, int y, Color color) {
         this.borad[x][y] = color;
-//        print();
-        boolean win = isWin(x, y, color);
-        if (win) {
-            return 100;
+        List<LinkedList<Zi>> zis = new ArrayList<LinkedList<Zi>>();
+        for (Dir d : dir) {
+            LinkedList<Zi> zi = fetch(x, y, d);
+            zis.add(zi);
         }
-        if (level < 5) {
-            next(x, y, color);
+        int c = evalComplex(zis);
+    }
+
+    private int evalComplex(List<LinkedList<Zi>> zis) {
+        // 如果一次着子形成了形成了n个棋形，那么分开着子的话，这次着子就相当于n次着子，
+        // 也就是说，去掉最大分支的方向（因为这个方向会被堵），其他方向上的各挣了一次着子的机会，所以其他方向加1，
+        // 然后算出所有方向中的最大值，就是这次着子的分数
+
+        int[] cs = new int[4];
+        int index = 0;
+        int maxIndex = 0;
+        int max = -5;
+        for (LinkedList<Zi> zi : zis) {
+            int c = evalLine(zi);
+            cs[index] = c;
+            if (c > max) {
+                max = c;
+                maxIndex = index;
+            }
+            index++;
         }
 
-        return 0;
+        for (int i = 0; i < index; i++) {
+            if (i != maxIndex && cs[i] > 1) {
+                cs[i]++;
+            }
+        }
+
+        max = -5;
+        for (int i = 0; i < index; i++) {
+            int c = cs[i];
+            if (c > max) {
+                max = c;
+            }
+        }
+
+        return max;
+    }
+
+    private int evalLine(LinkedList<Zi> zi) {
+        // 首先计算生存空间，如果小于5返回最低分
+        int count = 0;
+        int room = 0;
+        Iterator<Zi> iter = zi.iterator();
+        Zi z = iter.next();
+        count += z.c;
+        room += z.lr + z.c;
+        while (iter.hasNext()) {
+            z = iter.next();
+            count += z.c;
+            room += z.lr + z.c;
+        }
+        room += z.rr;
+
+        if (room < 5) {
+            return 0;
+        }
+
+        //如果有阻塞，减棋子
+        Zi f = zi.getFirst();
+        if (f.lr == 0) {
+            count--;
+        }
+        Zi l = zi.getLast();
+        if (l.rr == 0) {
+            count--;
+        }
+
+        return count;
     }
 
     private double next(int x, int y, final Color color) {
@@ -142,7 +213,6 @@ public class Snapshot {
         return false;
     }
 
-
     /**
      * 获取x,y为中心点两侧4个空位的旗子，加上x,y总共9个旗子
      * @param x
@@ -150,8 +220,9 @@ public class Snapshot {
      * @param dir
      * @return
      */
-    private List<Zi> fetch(int x, int y, Dir dir) {
+    private LinkedList<Zi> fetch(int x, int y, Dir dir) {
         Color color = borad[x][y];
+        Color negative = color == Color.White ? Color.Black : Color.White;
         LinkedList<Zi> zis = new LinkedList<Zi>();
 
         Zi zi = new Zi();
@@ -162,10 +233,10 @@ public class Snapshot {
             Zi z = zis.getFirst();
             int tx = x - dir.x * i;
             int ty = y - dir.y * i;
-            Color c = borad[tx][ty];
+            Color c = tx < 0 || ty < 0 || tx > 14 || ty > 14 ? negative : borad[tx][ty];
             if (c == Color.Nul) {
                 z.lr++;
-            } else if (c == color  ) {
+            } else if (c == color) {
                 if (z.lr == 0) {
                     z.c++;
                 } else {
@@ -183,7 +254,7 @@ public class Snapshot {
             Zi z = zis.getLast();
             int tx = x + dir.x * i;
             int ty = y + dir.y * i;
-            Color c = borad[tx][ty];
+            Color c = tx < 0 || ty < 0 || tx > 14 || ty > 14 ? negative : borad[tx][ty];
             if (c == Color.Nul) {
                 z.rr++;
             } else if (c == color  ) {
@@ -201,14 +272,6 @@ public class Snapshot {
         }
 
         return zis;
-    }
-
-    private void evaluate(int x, int y, Dir dir) {
-//        int man
-        List<Zi> zis = fetch(x, y, dir);
-        for (Zi zi : zis) {
-
-        }
     }
 
     private void print() {

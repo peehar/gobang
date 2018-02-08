@@ -33,6 +33,18 @@ var app = new Vue({
             var v = zi[x][y];
             var c = v == 0 ? '' : v == 1 ? 'cell white' : 'cell black';
             return c;
+        },
+        clear() {
+            Vue.http.post("/gobang/play", { clear: true }).then(function(data){
+                if(data.ok){
+                    var color =  JSON.parse(data.bodyText);
+                    for (var x = 0; x < 15; x++) {
+                        for (var y = 0; y < 15; y++) {
+                            zi[x][y] = color[x][y];
+                        }
+                    }
+                }
+            });
         }
     },
 })
