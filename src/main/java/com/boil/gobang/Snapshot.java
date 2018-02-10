@@ -25,28 +25,11 @@ public class Snapshot {
          */
     }
 
-    private static class Dir {
-        public int x;
-        public int y;
 
-        public Dir(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-    }
-
-    private static final Dir[] dir = new Dir[]{
-            new Dir(1, 0),
-            new Dir(0, 1),
-            new Dir(1, 1),
-            new Dir(1, -1)
-    };
 
     private Color[][] borad = new Color[15][15];
-    private int level;
 
-    public Snapshot(Color[][] color, int level) {
-        this.level = level;
+    public Snapshot(Color[][] color) {
         for (int x = 0; x < 15; x++) {
             for (int y = 0; y < 15; y++) {
                 this.borad[x][y] = color[x][y];
@@ -55,20 +38,20 @@ public class Snapshot {
     }
 
     public Snapshot() {
-        this.level = 0;
         for (int x = 0; x < 15; x++) {
             for (int y = 0; y < 15; y++) {
                 this.borad[x][y] = Color.Nul;
             }
         }
 
-        borad[7][3] = borad[7][3] = borad[7][3] = Color.Black;
+//        borad[7][3] = borad[7][3] = borad[7][3] = Color.Black;
 //        borad[7][5] = borad[7][7] = Color.White;
 
     }
 
+    @Override
     public Snapshot clone() {
-        return new Snapshot(this.borad, this.level + 1);
+        return new Snapshot(this.borad);
     }
 
     public Color[][] getcolor() {
@@ -76,42 +59,88 @@ public class Snapshot {
     }
 
 
-    public void play(int x, int y, Color color) {
+    public int play(int x, int y, Color color) {
         this.borad[x][y] = color;
+
+//        evalComplex(x, y, color);
+
+        Color ncolor = color == Color.Black ? Color.White : Color.Black;
+
+//        int s = evalDeep(x, y, ncolor, 0);
+
+        int s = npay(x, y, ncolor);
+
+        return s;
     }
 
-    private int evalDeep(int x, int y, Color color) {
-        for (Dir d : dir) {
-            for (int i = -1; i <=1; i += 2) {
-                for (int k = 1; k < 5; k++) {
-                    int tx = x + d.x * k * i;
-                    int ty = y + d.y * k * i;
-
-                    int s;
+    private int npay(int x, int y, Color color) {
+        int max = -5, maxx = 0, maxy = 0;
+        for (int i = 0; i < 15; i++) {
+            for (int j = 0; j < 15; j++) {
+                if (this.borad[i][j] == Color.Nul) {
                     Snapshot ss = this.clone();
-                    if (level == 4) {
-                        int ns = evalComplex(tx, ty);
-                        int as = ss.evalDeep(tx, ty, color == Color.Black ? Color.White : Color.Black);
-                        s = ns > as ? ns : as;
-                    } else if (level == 5) {
-                        s = evalComplex(tx, ty);
-                    } else {
-                        ss.play(tx, ty, color == Color.Black ? Color.White : Color.Black);
+                    ss.borad[i][j] = color;
+                    int s = ss.evalDeep(i, j, color, 0);
+                    if (max < s) {
+                        max = s;
+                        maxx = i;
+                        maxy = j;
                     }
                 }
             }
         }
-        return 0;
+
+        this.borad[maxx][maxy] = color;
+
+        return max;
     }
 
-    private int evalComplex(int x, int y) {
+    private int evalDeep(int x, int y, Color color, int level) {
+        int max = -5, maxx = 0, maxy = 0;
+        Color ncolor = color == Color.Black ? Color.White : Color.Black;
+        for (Point d : dir) {
+            for (int i = -1; i <=1; i += 2) {
+                for (int k = 1; k < 5; k++) {
+                    Snapshot ss = this.clone();
+                    int tx = x + d.x * k * i;
+                    int ty = y + d.y * k * i;
+                    if (ss.borad[tx][ty] == Color.Nul) {
+                        int s;
+                        if (level == 0) {
+                            int s1 = evalComplex(tx, ty, color);
+//                        int s2 = evalComplex(tx, ty, ncolor);
+                            int s2 = 0;
+                            s = s2 > s1 ? s2 : s1;
+                        } else {
+                            s = ss.evalDeep(tx, ty, ncolor, level + 1);
+                        }
+                        if (max < s) {
+                            max = s;
+                            maxx = tx;
+                            maxy = ty;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (max == -5) {
+            System.out.println("fdsafdsafdsafd");
+        }
+
+//        this.borad[maxx][maxy] = color;
+
+        return max;
+    }
+
+    private int evalComplex(int x, int y, Color color) {
         // 如果一次着子形成了n个棋形，那么分开着子的话，这次着子就相当于n次着子，
         // 也就是说，去掉最大分支的方向（因为这个方向会被堵），其他方向上的各挣了一次着子的机会，所以其他方向加1，
         // 然后算出所有方向中的最大值，就是这次着子的分数
 
         List<LinkedList<Zi>> zis = new ArrayList<LinkedList<Zi>>();
-        for (Dir d : dir) {
-            LinkedList<Zi> zi = fetch(x, y, d);
+        for (Point d : DirIter.dir) {
+            LinkedList<Zi> zi = fetch(x, y, d, color);
             zis.add(zi);
         }
 
@@ -248,8 +277,7 @@ public class Snapshot {
      * @param dir
      * @return
      */
-    private LinkedList<Zi> fetch(int x, int y, Dir dir) {
-        Color color = borad[x][y];
+    private LinkedList<Zi> fetch(int x, int y, Point dir, Color color) {
         Color negative = color == Color.White ? Color.Black : Color.White;
         LinkedList<Zi> zis = new LinkedList<Zi>();
 
@@ -340,11 +368,11 @@ public class Snapshot {
         color[7][3] = color[7][3] = color[7][9] = Color.Black;
         color[7][5] = color[7][7] = Color.White;
 
-        Snapshot ss = new Snapshot(color, 0);
+//        Snapshot ss = new Snapshot(color, 0);
 
 
-        List<Zi> r = ss.fetch(7, 7, dir[1]);
-        System.out.println(r);
+//        List<Zi> r = ss.fetch(7, 7, dir[1]);
+//        System.out.println(r);
 
 //
 //        PointIterator pi1 = new PointIterator(7, 7, -4, 0, dir[1], ss);
